@@ -22,6 +22,8 @@ export type Item = {
   destinationId: string;
   storeId: string;
   name: string;
+  description?: string;
+  photo?: Blob;
   createdAt: number;
 };
 

@@ -1,11 +1,16 @@
 "use client";
+import NiceModal from "@ebay/nice-modal-react";
 import { useQuery } from "@tanstack/react-query";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useQueryStates } from "nuqs";
+import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription } from "@/components/ui/empty";
 import { ITEMS_QUERY_KEY, listItems } from "@/lib/items";
 import { type ListId, selectionParsers } from "@/lib/lists";
 import { listStores, STORES_QUERY_KEY } from "@/lib/stores";
-import { NewItemForm } from "./new-item-form";
+import { DeleteItemModal } from "./delete-item-modal";
+import { ItemFormModal } from "./item-form-modal";
+import { ItemPhoto } from "./item-photo";
 
 export function ItemList({
   destinationId,
@@ -38,22 +43,67 @@ export function ItemList({
 
   return (
     <section className="flex flex-1 flex-col gap-4 py-4">
-      <h2 className="font-semibold">{store.name}</h2>
-      {/* Keyed so a half-typed name doesn't carry over to another store. */}
-      <NewItemForm
-        key={store.id}
-        destinationId={destinationId}
-        storeId={store.id}
-      />
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold">{store.name}</h2>
+        <Button
+          variant="outline"
+          onClick={() =>
+            NiceModal.show(ItemFormModal, { destinationId, storeId })
+          }
+        >
+          <Plus /> 新增品項
+        </Button>
+      </div>
       {isPending ? null : items.length === 0 ? (
         <Empty>
           <EmptyDescription>這間店還沒有品項</EmptyDescription>
         </Empty>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2">
           {items.map((item) => (
-            <li key={item.id} className="rounded-md border px-3 py-2">
-              {item.name}
+            <li
+              key={item.id}
+              className="flex items-start gap-3 rounded-md border p-3"
+            >
+              {item.photo && (
+                <ItemPhoto
+                  photo={item.photo}
+                  alt={item.name}
+                  className="size-16"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{item.name}</p>
+                {item.description && (
+                  <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+                    {item.description}
+                  </p>
+                )}
+              </div>
+              <span className="flex shrink-0">
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={`編輯 ${item.name}`}
+                  onClick={() =>
+                    NiceModal.show(ItemFormModal, {
+                      destinationId,
+                      storeId,
+                      item,
+                    })
+                  }
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={`刪除 ${item.name}`}
+                  onClick={() => NiceModal.show(DeleteItemModal, { item })}
+                >
+                  <Trash2 />
+                </Button>
+              </span>
             </li>
           ))}
         </ul>
