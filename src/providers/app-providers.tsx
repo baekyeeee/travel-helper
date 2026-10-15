@@ -13,9 +13,10 @@ export default function AppProviders({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NiceModal.Provider>
-        <NuqsAdapter>{children}</NuqsAdapter>
-      </NiceModal.Provider>
+      {/* Modals render inside NiceModal.Provider, so nuqs must wrap it. */}
+      <NuqsAdapter>
+        <NiceModal.Provider>{children}</NiceModal.Provider>
+      </NuqsAdapter>
     </QueryClientProvider>
   );
 }

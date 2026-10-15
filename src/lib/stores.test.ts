@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createDestination, deleteDestination } from "./destinations";
 import {
   createStore,
+  filterStoresByName,
   linkStore,
   listLinkableStores,
   listStores,
@@ -86,5 +87,19 @@ describe("stores", () => {
     await linkStore(japan.id, starbucks.id);
 
     expect(await listStores(japan.id, "eat")).toEqual([starbucks]);
+  });
+
+  it("filters stores by a case-insensitive, trimmed name search", async () => {
+    const korea = await createDestination("Korea");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+    const cafe = await createStore(korea.id, "eat", "Cafe");
+
+    expect(filterStoresByName([starbucks, cafe], " STAR ")).toEqual([
+      starbucks,
+    ]);
+    expect(filterStoresByName([starbucks, cafe], "")).toEqual([
+      starbucks,
+      cafe,
+    ]);
   });
 });

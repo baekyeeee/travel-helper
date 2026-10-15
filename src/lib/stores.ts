@@ -63,6 +63,11 @@ export async function listLinkableStores(
     .sort((a, b) => a.createdAt - b.createdAt);
 }
 
+export function filterStoresByName(stores: Store[], query: string): Store[] {
+  const needle = query.trim().toLowerCase();
+  return stores.filter((store) => store.name.toLowerCase().includes(needle));
+}
+
 export async function linkStore(destinationId: string, storeId: string) {
   const db = await getDb();
   const tx = db.transaction(["stores", "destinationStores"], "readwrite");
