@@ -1,7 +1,12 @@
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createDestination, deleteDestination } from "./destinations";
-import { createStore, listStores } from "./stores";
+import {
+  createStore,
+  linkStore,
+  listLinkableStores,
+  listStores,
+} from "./stores";
 
 beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
@@ -48,5 +53,38 @@ describe("stores", () => {
     await deleteDestination(korea.id);
 
     expect(await listStores(korea.id, "buy")).toEqual([]);
+  });
+
+  it("reuses an existing store under another destination without duplicating it", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+
+    await linkStore(japan.id, starbucks.id);
+
+    expect(await listStores(japan.id, "eat")).toEqual([starbucks]);
+    expect(await listStores(korea.id, "eat")).toEqual([starbucks]);
+    expect(await listStores(japan.id, "buy")).toEqual([]);
+  });
+
+  it("offers only same-list stores not yet in the destination", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+    await createStore(korea.id, "buy", "Olive Young");
+    await createStore(japan.id, "eat", "Ichiran");
+
+    expect(await listLinkableStores(japan.id, "eat")).toEqual([starbucks]);
+  });
+
+  it("ignores linking the same store to a destination twice", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+
+    await linkStore(japan.id, starbucks.id);
+    await linkStore(japan.id, starbucks.id);
+
+    expect(await listStores(japan.id, "eat")).toEqual([starbucks]);
   });
 });

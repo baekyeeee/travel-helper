@@ -48,6 +48,34 @@ export async function listStores(
     .sort((a, b) => a.createdAt - b.createdAt);
 }
 
+export async function listLinkableStores(
+  destinationId: string,
+  listId: ListId,
+): Promise<Store[]> {
+  const db = await getDb();
+  const [stores, links] = await Promise.all([
+    db.getAll("stores"),
+    db.getAllFromIndex("destinationStores", "byDestination", destinationId),
+  ]);
+  const linked = new Set(links.map((link) => link.storeId));
+  return stores
+    .filter((store) => store.listId === listId && !linked.has(store.id))
+    .sort((a, b) => a.createdAt - b.createdAt);
+}
+
+export async function linkStore(destinationId: string, storeId: string) {
+  const db = await getDb();
+  const tx = db.transaction(["stores", "destinationStores"], "readwrite");
+  if (!(await tx.objectStore("stores").get(storeId))) {
+    throw new Error("Store does not exist");
+  }
+  const links = tx.objectStore("destinationStores");
+  if (!(await links.get([destinationId, storeId]))) {
+    await links.put({ destinationId, storeId, createdAt: nextCreatedAt() });
+  }
+  await tx.done;
+}
+
 export async function removeDestinationStores(destinationId: string) {
   const db = await getDb();
   const tx = db.transaction("destinationStores", "readwrite");
