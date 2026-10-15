@@ -2,8 +2,8 @@ import { parseAsString, parseAsStringLiteral } from "nuqs";
 import type { Destination } from "./destinations";
 
 export const LISTS = [
-  { id: "buy", label: "想買", emptyText: "還沒有想買的店家" },
-  { id: "eat", label: "想吃", emptyText: "還沒有想吃的店家" },
+  { id: "buy", label: "💸", emptyText: "還沒有想買的東西" },
+  { id: "eat", label: "🐷", emptyText: "還沒有想吃的店家" },
 ] as const;
 
 export type ListId = (typeof LISTS)[number]["id"];
