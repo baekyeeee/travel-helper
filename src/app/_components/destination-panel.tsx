@@ -10,6 +10,8 @@ import {
   selectionParsers,
 } from "@/lib/lists";
 
+import { StoreList } from "./store-list";
+
 export function DestinationPanel() {
   const [selection, setSelection] = useQueryStates(selectionParsers);
   const { data: destinations = [], isLoading } = useQuery({
@@ -45,9 +47,11 @@ export function DestinationPanel() {
         </TabsList>
         {LISTS.map((list) => (
           <TabsContent key={list.id} value={list.id}>
-            <p className="py-8 text-center text-muted-foreground">
-              {list.emptyText}
-            </p>
+            <StoreList
+              destinationId={destination.id}
+              listId={list.id}
+              emptyText={list.emptyText}
+            />
           </TabsContent>
         ))}
       </Tabs>

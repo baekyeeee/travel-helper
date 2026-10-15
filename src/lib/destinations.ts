@@ -1,22 +1,10 @@
-import { type DBSchema, openDB } from "idb";
+import { getDb } from "./db";
 
 export type Destination = {
   id: string;
   name: string;
   createdAt: number;
 };
-
-interface TravelDb extends DBSchema {
-  destinations: { key: string; value: Destination };
-}
-
-function getDb() {
-  return openDB<TravelDb>("travel-helper", 1, {
-    upgrade(db) {
-      db.createObjectStore("destinations", { keyPath: "id" });
-    },
-  });
-}
 
 export const DESTINATIONS_QUERY_KEY = ["destinations"];
 
@@ -62,5 +50,11 @@ export async function renameDestination(id: string, name: string) {
 
 export async function deleteDestination(id: string) {
   const db = await getDb();
-  await db.delete("destinations", id);
+  const tx = db.transaction(["destinations", "destinationStores"], "readwrite");
+  await tx.objectStore("destinations").delete(id);
+  const links = tx.objectStore("destinationStores");
+  for (const key of await links.index("byDestination").getAllKeys(id)) {
+    await links.delete(key);
+  }
+  await tx.done;
 }
