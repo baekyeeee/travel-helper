@@ -10,6 +10,7 @@ import {
   selectionParsers,
 } from "@/lib/lists";
 
+import { ItemList } from "./item-list";
 import { StoreList } from "./store-list";
 
 export function DestinationPanel() {
@@ -36,7 +37,9 @@ export function DestinationPanel() {
       <h1 className="text-xl font-semibold">{destination.name}</h1>
       <Tabs
         value={selection.list}
-        onValueChange={(list) => setSelection({ list: list as ListId })}
+        onValueChange={(list) =>
+          setSelection({ list: list as ListId, store: null })
+        }
       >
         <TabsList>
           {LISTS.map((list) => (
@@ -46,12 +49,13 @@ export function DestinationPanel() {
           ))}
         </TabsList>
         {LISTS.map((list) => (
-          <TabsContent key={list.id} value={list.id}>
+          <TabsContent key={list.id} value={list.id} className="flex gap-6">
             <StoreList
               destinationId={destination.id}
               listId={list.id}
               emptyText={list.emptyText}
             />
+            <ItemList destinationId={destination.id} listId={list.id} />
           </TabsContent>
         ))}
       </Tabs>

@@ -16,6 +16,15 @@ export type DestinationStore = {
   createdAt: number;
 };
 
+// Items belong to one Destination's use of a Store, so they're keyed by the pair.
+export type Item = {
+  id: string;
+  destinationId: string;
+  storeId: string;
+  name: string;
+  createdAt: number;
+};
+
 interface TravelDb extends DBSchema {
   destinations: { key: string; value: Destination };
   stores: { key: string; value: Store };
@@ -24,10 +33,15 @@ interface TravelDb extends DBSchema {
     value: DestinationStore;
     indexes: { byDestination: string };
   };
+  items: {
+    key: string;
+    value: Item;
+    indexes: { byDestinationStore: [string, string] };
+  };
 }
 
 export function getDb() {
-  return openDB<TravelDb>("travel-helper", 2, {
+  return openDB<TravelDb>("travel-helper", 3, {
     upgrade(db) {
       if (!db.objectStoreNames.contains("destinations")) {
         db.createObjectStore("destinations", { keyPath: "id" });
@@ -40,6 +54,10 @@ export function getDb() {
           keyPath: ["destinationId", "storeId"],
         });
         links.createIndex("byDestination", "destinationId");
+      }
+      if (!db.objectStoreNames.contains("items")) {
+        const items = db.createObjectStore("items", { keyPath: "id" });
+        items.createIndex("byDestinationStore", ["destinationId", "storeId"]);
       }
     },
   });

@@ -41,7 +41,9 @@ export function DestinationSidebar() {
               variant="ghost"
               className="min-w-0 flex-1 justify-start"
               aria-current={destination.id === selection.destination}
-              onClick={() => setSelection({ destination: destination.id })}
+              onClick={() =>
+                setSelection({ destination: destination.id, store: null })
+              }
             >
               <span className="truncate">{destination.name}</span>
             </Button>

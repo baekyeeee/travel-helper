@@ -14,6 +14,7 @@ const LIST_IDS = LISTS.map((list) => list.id);
 export const selectionParsers = {
   destination: parseAsString.withDefault(""),
   list: parseAsStringLiteral(LIST_IDS).withDefault("buy"),
+  store: parseAsString.withDefault(""),
 };
 
 export function resolveSelectedDestination(

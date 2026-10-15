@@ -2,8 +2,9 @@
 import NiceModal from "@ebay/nice-modal-react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
+import { useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
-import type { ListId } from "@/lib/lists";
+import { type ListId, selectionParsers } from "@/lib/lists";
 import { listStores, STORES_QUERY_KEY } from "@/lib/stores";
 import { StoreFormModal } from "./store-form-modal";
 
@@ -20,6 +21,7 @@ export function StoreList({
     queryKey: [...STORES_QUERY_KEY, destinationId, listId],
     queryFn: () => listStores(destinationId, listId),
   });
+  const [selection, setSelection] = useQueryStates(selectionParsers);
 
   return (
     <aside className="flex w-64 flex-col gap-2 py-4">
@@ -36,8 +38,15 @@ export function StoreList({
       ) : (
         <ul className="flex flex-col gap-1">
           {stores.map((store) => (
-            <li key={store.id} className="rounded-md border px-3 py-2">
-              {store.name}
+            <li key={store.id}>
+              <Button
+                variant={store.id === selection.store ? "secondary" : "ghost"}
+                className="w-full justify-start"
+                aria-current={store.id === selection.store}
+                onClick={() => setSelection({ store: store.id })}
+              >
+                <span className="truncate">{store.name}</span>
+              </Button>
             </li>
           ))}
         </ul>
