@@ -1,4 +1,6 @@
 import { getDb } from "./db";
+import { removeDestinationStores } from "./stores";
+import { nextCreatedAt } from "./timestamps";
 
 export type Destination = {
   id: string;
@@ -7,13 +9,6 @@ export type Destination = {
 };
 
 export const DESTINATIONS_QUERY_KEY = ["destinations"];
-
-// Strictly increasing so destinations created in the same millisecond keep their order.
-let lastCreatedAt = 0;
-function nextCreatedAt() {
-  lastCreatedAt = Math.max(Date.now(), lastCreatedAt + 1);
-  return lastCreatedAt;
-}
 
 function normalizeName(name: string) {
   const trimmed = name.trim();
@@ -49,12 +44,7 @@ export async function renameDestination(id: string, name: string) {
 }
 
 export async function deleteDestination(id: string) {
+  await removeDestinationStores(id);
   const db = await getDb();
-  const tx = db.transaction(["destinations", "destinationStores"], "readwrite");
-  await tx.objectStore("destinations").delete(id);
-  const links = tx.objectStore("destinationStores");
-  for (const key of await links.index("byDestination").getAllKeys(id)) {
-    await links.delete(key);
-  }
-  await tx.done;
+  await db.delete("destinations", id);
 }

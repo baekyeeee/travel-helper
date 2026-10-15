@@ -1,6 +1,6 @@
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createDestination } from "./destinations";
+import { createDestination, deleteDestination } from "./destinations";
 import { createStore, listStores } from "./stores";
 
 beforeEach(() => {
@@ -39,5 +39,14 @@ describe("stores", () => {
       "Tteokbokki",
       "Cafe",
     ]);
+  });
+
+  it("drops a deleted destination's stores from its lists", async () => {
+    const korea = await createDestination("Korea");
+    await createStore(korea.id, "buy", "Starbucks");
+
+    await deleteDestination(korea.id);
+
+    expect(await listStores(korea.id, "buy")).toEqual([]);
   });
 });

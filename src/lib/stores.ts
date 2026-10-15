@@ -1,16 +1,10 @@
 import { getDb, type Store } from "./db";
 import type { ListId } from "./lists";
+import { nextCreatedAt } from "./timestamps";
 
 export type { Store };
 
 export const STORES_QUERY_KEY = ["stores"];
-
-// Strictly increasing so stores created in the same millisecond keep their order.
-let lastCreatedAt = 0;
-function nextCreatedAt() {
-  lastCreatedAt = Math.max(Date.now(), lastCreatedAt + 1);
-  return lastCreatedAt;
-}
 
 export async function createStore(
   destinationId: string,
@@ -52,4 +46,12 @@ export async function listStores(
   return stores
     .filter((store): store is Store => store?.listId === listId)
     .sort((a, b) => a.createdAt - b.createdAt);
+}
+
+export async function removeDestinationStores(destinationId: string) {
+  const db = await getDb();
+  const tx = db.transaction("destinationStores", "readwrite");
+  const keys = await tx.store.index("byDestination").getAllKeys(destinationId);
+  await Promise.all(keys.map((key) => tx.store.delete(key)));
+  await tx.done;
 }
