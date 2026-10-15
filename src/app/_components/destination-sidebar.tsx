@@ -2,8 +2,10 @@
 import NiceModal from "@ebay/nice-modal-react";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { DESTINATIONS_QUERY_KEY, listDestinations } from "@/lib/destinations";
+import { selectionParsers } from "@/lib/lists";
 import { DeleteDestinationModal } from "./delete-destination-modal";
 import { DestinationFormModal } from "./destination-form-modal";
 
@@ -12,6 +14,8 @@ export function DestinationSidebar() {
     queryKey: DESTINATIONS_QUERY_KEY,
     queryFn: listDestinations,
   });
+
+  const [selection, setSelection] = useQueryStates(selectionParsers);
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r">
@@ -30,9 +34,17 @@ export function DestinationSidebar() {
         {destinations.map((destination) => (
           <li
             key={destination.id}
-            className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted"
+            className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted data-[selected=true]:bg-muted"
+            data-selected={destination.id === selection.destination}
           >
-            <span className="truncate">{destination.name}</span>
+            <Button
+              variant="ghost"
+              className="min-w-0 flex-1 justify-start"
+              aria-current={destination.id === selection.destination}
+              onClick={() => setSelection({ destination: destination.id })}
+            >
+              <span className="truncate">{destination.name}</span>
+            </Button>
             <span className="flex shrink-0">
               <Button
                 size="icon-sm"
