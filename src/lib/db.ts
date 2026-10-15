@@ -1,4 +1,4 @@
-import { type DBSchema, openDB } from "idb";
+import { type DBSchema, type IDBPTransaction, openDB } from "idb";
 import type { Destination } from "./destinations";
 import type { ListId } from "./lists";
 
@@ -33,7 +33,7 @@ interface TravelDb extends DBSchema {
   destinationStores: {
     key: [string, string];
     value: DestinationStore;
-    indexes: { byDestination: string };
+    indexes: { byDestination: string; byStore: string };
   };
   items: {
     key: string;
@@ -42,9 +42,25 @@ interface TravelDb extends DBSchema {
   };
 }
 
+type CleanupStore = "destinations" | "stores" | "destinationStores" | "items";
+
+// A read-write transaction over every store that removing a Store link touches.
+export type CleanupTx = IDBPTransaction<
+  TravelDb,
+  ArrayLike<CleanupStore>,
+  "readwrite"
+>;
+
+export const CLEANUP_STORES = [
+  "destinations",
+  "stores",
+  "destinationStores",
+  "items",
+] as const satisfies CleanupStore[];
+
 export function getDb() {
-  return openDB<TravelDb>("travel-helper", 3, {
-    upgrade(db) {
+  return openDB<TravelDb>("travel-helper", 4, {
+    upgrade(db, _oldVersion, _newVersion, tx) {
       if (!db.objectStoreNames.contains("destinations")) {
         db.createObjectStore("destinations", { keyPath: "id" });
       }
@@ -57,10 +73,18 @@ export function getDb() {
         });
         links.createIndex("byDestination", "destinationId");
       }
+      const links = tx.objectStore("destinationStores");
+      if (!links.indexNames.contains("byStore")) {
+        links.createIndex("byStore", "storeId");
+      }
       if (!db.objectStoreNames.contains("items")) {
         const items = db.createObjectStore("items", { keyPath: "id" });
         items.createIndex("byDestinationStore", ["destinationId", "storeId"]);
       }
+    },
+    // Let a newer version (another tab, or a hot reload) upgrade instead of hanging.
+    blocking(_currentVersion, _blockedVersion, event) {
+      (event.target as IDBDatabase).close();
     },
   });
 }

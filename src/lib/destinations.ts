@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { CLEANUP_STORES, getDb } from "./db";
 import { removeDestinationStores } from "./stores";
 import { nextCreatedAt } from "./timestamps";
 
@@ -44,7 +44,9 @@ export async function renameDestination(id: string, name: string) {
 }
 
 export async function deleteDestination(id: string) {
-  await removeDestinationStores(id);
   const db = await getDb();
-  await db.delete("destinations", id);
+  const tx = db.transaction(CLEANUP_STORES, "readwrite");
+  await removeDestinationStores(tx, id);
+  await tx.objectStore("destinations").delete(id);
+  await tx.done;
 }
