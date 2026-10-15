@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -20,6 +22,7 @@
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
     "dayjs": "^1.11.23",
+    "idb": "^8.0.4",
     "immer": "^11.1.21",
     "ky": "^2.2.0",
     "lucide-react": "^1.56.0",
@@ -43,9 +46,11 @@
     "@types/numeral": "^2.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "fake-indexeddb": "^6.2.5",
     "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@12.9.1"
 }
