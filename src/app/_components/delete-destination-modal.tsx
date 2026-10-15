@@ -16,6 +16,8 @@ import {
   type Destination,
   deleteDestination,
 } from "@/lib/destinations";
+import { ITEMS_QUERY_KEY } from "@/lib/items";
+import { STORES_QUERY_KEY } from "@/lib/stores";
 
 export const DeleteDestinationModal = NiceModal.create<{
   destination: Destination;
@@ -26,6 +28,9 @@ export const DeleteDestinationModal = NiceModal.create<{
     mutationFn: () => deleteDestination(destination.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DESTINATIONS_QUERY_KEY });
+      // Deleting a destination can remove its items and now-unused stores.
+      queryClient.invalidateQueries({ queryKey: STORES_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ITEMS_QUERY_KEY });
       modal.hide();
     },
   });

@@ -9,7 +9,7 @@ const destinations = [
 describe("LISTS", () => {
   it("has the two fixed lists, buy first", () => {
     expect(LISTS.map((list) => list.id)).toEqual(["buy", "eat"]);
-    expect(LISTS.map((list) => list.label)).toEqual(["想買", "想吃"]);
+    expect(LISTS.map((list) => list.label)).toEqual(["💸", "🐷"]);
   });
 });
 

@@ -1,12 +1,15 @@
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createDestination, deleteDestination } from "./destinations";
+import { createItem, listItems } from "./items";
 import {
   createStore,
   filterStoresByName,
   linkStore,
   listLinkableStores,
   listStores,
+  removeStoreFromDestination,
+  renameStore,
 } from "./stores";
 
 beforeEach(() => {
@@ -101,5 +104,67 @@ describe("stores", () => {
       starbucks,
       cafe,
     ]);
+  });
+
+  it("renames a shared store everywhere it is used", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+    await linkStore(japan.id, starbucks.id);
+
+    await renameStore(starbucks.id, " Starbucks Reserve ");
+    await expect(renameStore(starbucks.id, "  ")).rejects.toThrow();
+
+    for (const destination of [korea, japan]) {
+      expect(
+        (await listStores(destination.id, "eat")).map((s) => s.name),
+      ).toEqual(["Starbucks Reserve"]);
+    }
+  });
+
+  it("removes a shared store from one destination only, with that destination's items", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+    await linkStore(japan.id, starbucks.id);
+    await createItem(korea.id, starbucks.id, { name: "Hojicha Latte" });
+    const sakura = await createItem(japan.id, starbucks.id, {
+      name: "Sakura Frappuccino",
+    });
+
+    await removeStoreFromDestination(korea.id, starbucks.id);
+
+    expect(await listStores(korea.id, "eat")).toEqual([]);
+    expect(await listItems(korea.id, starbucks.id)).toEqual([]);
+    expect(await listStores(japan.id, "eat")).toEqual([starbucks]);
+    expect(await listItems(japan.id, starbucks.id)).toEqual([sakura]);
+  });
+
+  it("deletes a store from the catalog once no destination uses it", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+
+    await removeStoreFromDestination(korea.id, starbucks.id);
+
+    expect(await listLinkableStores(japan.id, "eat")).toEqual([]);
+    await expect(linkStore(japan.id, starbucks.id)).rejects.toThrow();
+  });
+
+  it("cleans up like unlinking each store when a destination is deleted", async () => {
+    const korea = await createDestination("Korea");
+    const japan = await createDestination("Japan");
+    const taiwan = await createDestination("Taiwan");
+    const starbucks = await createStore(korea.id, "eat", "Starbucks");
+    const oliveYoung = await createStore(korea.id, "buy", "Olive Young");
+    await linkStore(japan.id, starbucks.id);
+    await createItem(korea.id, starbucks.id, { name: "Hojicha Latte" });
+
+    await deleteDestination(korea.id);
+
+    expect(await listItems(korea.id, starbucks.id)).toEqual([]);
+    expect(await listStores(japan.id, "eat")).toEqual([starbucks]);
+    expect(await listLinkableStores(taiwan.id, "buy")).toEqual([]);
+    await expect(linkStore(taiwan.id, oliveYoung.id)).rejects.toThrow();
   });
 });
