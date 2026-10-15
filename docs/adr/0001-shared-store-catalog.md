@@ -1,0 +1,3 @@
+# Shared Store catalog, per-Destination Items
+
+Stores (e.g. "Starbucks") can be viewed as nested under each Destination's List, which looks like they belong to that Destination alone. We decided a Store is actually a single shared record reused across Destinations by picking it from an existing list, rather than re-created per Destination — this avoids duplicate/misspelled Store entries when the same place is relevant to multiple trips. Items and their completed status, however, are NOT shared: each Destination keeps its own separate set of Items under a shared Store, since what you want from a place (and whether you've bought it) differs per trip.
